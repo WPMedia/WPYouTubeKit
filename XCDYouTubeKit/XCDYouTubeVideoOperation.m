@@ -14,12 +14,8 @@
 #import "XCDYouTubeLogger+Private.h"
 
 typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
-	XCDYouTubeRequestTypeGetVideoInfo = 1,
-	XCDYouTubeRequestTypeWatchPage,
-	XCDYouTubeRequestTypeEmbedPage,
-	XCDYouTubeRequestTypeJavaScriptPlayer,
-	XCDYouTubeRequestTypeDashManifest,
-	
+    XCDYouTubeRequestTypeWatchPage,
+    XCDYouTubeRequestTypeDashManifest,
 };
 
 @interface XCDYouTubeVideoOperation ()
@@ -129,47 +125,15 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) startNextRequest
 {
-	if (self.eventLabels.count == 0)
-	{
-		if (self.requestType == XCDYouTubeRequestTypeWatchPage || self.webpage)
-		{
-			if (self.ranLastEmbedPage == NO) {
-				[self startLastEmbedPageRequest];
-				return;
-			}
-			[self finishWithError];
-		}
-		else
-		{
-			[self startWatchPageRequest];
-		}
-	}
-	else
-	{
-		NSString *eventLabel = [self.eventLabels objectAtIndex:0];
-		[self.eventLabels removeObjectAtIndex:0];
-		
-		NSDictionary *query = @{ @"video_id": self.videoIdentifier, @"hl": self.languageIdentifier, @"el": eventLabel, @"ps": @"default" };
-		NSString *queryString = XCDQueryStringWithDictionary(query);
-		NSURL *videoInfoURL = [NSURL URLWithString:[@"https://www.youtube.com/get_video_info?" stringByAppendingString:queryString]];
-		[self startRequestWithURL:videoInfoURL type:XCDYouTubeRequestTypeGetVideoInfo];
-	}
+    [self startWatchPageRequest];
 }
 
 - (void) startWatchPageRequest
 {
-	NSDictionary *query = @{ @"v": self.videoIdentifier, @"hl": self.languageIdentifier, @"has_verified": @YES, @"bpctr": @9999999999 };
-	NSString *queryString = XCDQueryStringWithDictionary(query);
-	NSURL *webpageURL = [NSURL URLWithString:[@"https://www.youtube.com/watch?" stringByAppendingString:queryString]];
-	[self startRequestWithURL:webpageURL type:XCDYouTubeRequestTypeWatchPage];
-}
-
-// Last resort request, sometimes the `javaScriptPlayerURL` will randomly not appear on `webpage` but will appear on the `embedWebpage` regardless of age restrictions. This appears to be how youtube-dl handles it, see https://github.com/l1ving/youtube-dl/blob/4fcd20a46cbf35ebbeaf06dde3999ad4309d7a8e/youtube_dl/extractor/youtube.py#L1963
-- (void) startLastEmbedPageRequest
-{
-	self.ranLastEmbedPage = YES;
-	NSString *embedURLString = [NSString stringWithFormat:@"https://www.youtube.com/embed/%@", self.videoIdentifier];
-	[self startRequestWithURL:[NSURL URLWithString:embedURLString] type:XCDYouTubeRequestTypeEmbedPage];
+    NSDictionary *query = @{ @"v": self.videoIdentifier, @"hl": self.languageIdentifier, @"has_verified": @YES, @"bpctr": @9999999999 };
+    NSString *queryString = XCDQueryStringWithDictionary(query);
+    NSURL *webpageURL = [NSURL URLWithString:[@"https://www.youtube.com/watch?" stringByAppendingString:queryString]];
+    [self startRequestWithURL:webpageURL type:XCDYouTubeRequestTypeWatchPage];
 }
 
 - (void) startRequestWithURL:(NSURL *)url type:(XCDYouTubeRequestType)requestType
@@ -210,46 +174,13 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) handleConnectionSuccessWithData:(NSData *)data response:(NSURLResponse *)response requestType:(XCDYouTubeRequestType)requestType
 {
-	CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)response.textEncodingName ?: CFSTR(""));
-	// Use kCFStringEncodingMacRoman as fallback because it defines characters for every byte value and is ASCII compatible. See https://mikeash.com/pyblog/friday-qa-2010-02-19-character-encodings.html
-	NSString *responseString = CFBridgingRelease(CFStringCreateWithBytes(kCFAllocatorDefault, data.bytes, (CFIndex)data.length, encoding != kCFStringEncodingInvalidId ? encoding : kCFStringEncodingMacRoman, false)) ?: @"";
-	
-	XCDYouTubeLogVerbose(@"Response: %@\n%@", response, responseString);
-	if ([(NSHTTPURLResponse *)response statusCode] == 429)
-	{
-		//See 429 indicates too many requests https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429
-		// This can happen when YouTube blocks the clients because of too many requests
-		[self handleConnectionError:[NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorTooManyRequests userInfo:@{NSLocalizedDescriptionKey : @"The operation couldn’t be completed because too many requests were sent."}] requestType:requestType];
-		return;
-	}
-	if (responseString.length == 0)
-	{
-		//Previously we would throw an assertion here, however, this has been changed to an error
-		//See more here https://github.com/0xced/XCDYouTubeKit/issues/479
-		self.lastError = [NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorEmptyResponse userInfo:nil];
-		XCDYouTubeLogError(@"Failed to decode response from %@ (response.textEncodingName = %@, data.length = %@)", response.URL, response.textEncodingName, @(data.length));
-		[self finishWithError];
-		return;
-	}
-	
-	switch (requestType)
-	{
-		case XCDYouTubeRequestTypeGetVideoInfo:
-			[self handleVideoInfoResponseWithInfo:XCDDictionaryWithQueryString(responseString) response:response];
-			break;
-		case XCDYouTubeRequestTypeWatchPage:
-			[self handleWebPageWithHTMLString:responseString];
-			break;
-		case XCDYouTubeRequestTypeEmbedPage:
-			[self handleEmbedWebPageWithHTMLString:responseString];
-			break;
-		case XCDYouTubeRequestTypeJavaScriptPlayer:
-			[self handleJavaScriptPlayerWithScript:responseString];
-			break;
-		case XCDYouTubeRequestTypeDashManifest:
-			[self handleDashManifestWithXMLString:responseString response:response];
-			break;
-	}
+    CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)response.textEncodingName ?: CFSTR(""));
+    // Use kCFStringEncodingMacRoman as fallback because it defines characters for every byte value and is ASCII compatible. See https://mikeash.com/pyblog/friday-qa-2010-02-19-character-encodings.html
+    NSString *responseString = CFBridgingRelease(CFStringCreateWithBytes(kCFAllocatorDefault, data.bytes, (CFIndex)data.length, encoding != kCFStringEncodingInvalidId ? encoding : kCFStringEncodingMacRoman, false)) ?: @"";
+
+    XCDYouTubeLogVerbose(@"Response: %@\n%@", response, responseString);
+
+    [self handleWebPageWithHTMLString:responseString];
 }
 
 - (void) handleConnectionError:(NSError *)connectionError requestType:(XCDYouTubeRequestType)requestType
@@ -310,65 +241,15 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) handleWebPageWithHTMLString:(NSString *)html
 {
-	XCDYouTubeLogDebug(@"Handling web page response");
-	
-	self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
-	
-	if (self.webpage.javaScriptPlayerURL)
-	{
-		[self startRequestWithURL:self.webpage.javaScriptPlayerURL type:XCDYouTubeRequestTypeJavaScriptPlayer];
-	}
-	else
-	{
-		if (self.webpage.isAgeRestricted)
-		{
-			NSString *embedURLString = [NSString stringWithFormat:@"https://www.youtube.com/embed/%@", self.videoIdentifier];
-			[self startRequestWithURL:[NSURL URLWithString:embedURLString] type:XCDYouTubeRequestTypeEmbedPage];
-		}
-		else
-		{
-			[self startNextRequest];
-		}
-	}
+    XCDYouTubeLogDebug(@"Handling web page response");
+
+    self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
+
+    XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:self.webpage.videoInfo playerScript:nil response:nil error:nil];
+    [self finishWithVideo:video];
 }
 
-- (void) handleEmbedWebPageWithHTMLString:(NSString *)html
-{
-	XCDYouTubeLogDebug(@"Handling embed web page response");
-	
-	self.embedWebpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
-	
-	if (self.embedWebpage.javaScriptPlayerURL)
-	{
-		[self startRequestWithURL:self.embedWebpage.javaScriptPlayerURL type:XCDYouTubeRequestTypeJavaScriptPlayer];
-	}
-	else
-	{
-		[self startNextRequest];
-	}
-}
-
-- (void) handleJavaScriptPlayerWithScript:(NSString *)script
-{
-	XCDYouTubeLogDebug(@"Handling JavaScript player response");
-	
-	self.playerScript = [[XCDYouTubePlayerScript alloc] initWithString:script customPatterns:self.customPatterns];
-	
-	if (self.webpage.isAgeRestricted && self.cookies.count == 0)
-	{
-		NSString *eurl = [@"https://youtube.googleapis.com/v/" stringByAppendingString:self.videoIdentifier];
-		NSString *sts = self.embedWebpage.sts ?: self.webpage.sts ?: @"";
-		NSDictionary *query = @{ @"video_id": self.videoIdentifier, @"hl": self.languageIdentifier, @"eurl": eurl, @"sts": sts};
-		NSString *queryString = XCDQueryStringWithDictionary(query);
-		NSURL *videoInfoURL = [NSURL URLWithString:[@"https://www.youtube.com/get_video_info?" stringByAppendingString:queryString]];
-		[self startRequestWithURL:videoInfoURL type:XCDYouTubeRequestTypeGetVideoInfo];
-	}
-	else
-	{
-		[self handleVideoInfoResponseWithInfo:self.webpage.videoInfo response:nil];
-	}
-}
-
+/* For possible use with Live videos. Still unsure this is the path to display Live videos
 - (void) handleDashManifestWithXMLString:(NSString *)XMLString response:(NSURLResponse *)response
 {
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
@@ -380,6 +261,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	
 	[self finishWithVideo:self.lastSuccessfulVideo];
 }
+*/
 
 #pragma mark - Finish Operation
 
