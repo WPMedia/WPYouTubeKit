@@ -201,44 +201,6 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 #pragma mark - Response Parsing
 
-- (void) handleVideoInfoResponseWithInfo:(NSDictionary *)info response:(NSURLResponse *)response
-{
-	XCDYouTubeLogDebug(@"Handling video info response");
-	
-	NSError *error = nil;
-	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info playerScript:self.playerScript response:response error:&error];
-	if (video)
-	{
-		self.lastSuccessfulVideo = video;
-		
-		if (info[@"dashmpd"])
-		{
-			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)info[@"dashmpd"]];
-			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
-			return;
-		}
-		[video mergeVideo:self.noStreamVideo];
-		[self finishWithVideo:video];
-	}
-	else
-	{
-		if ([error.domain isEqual:XCDYouTubeVideoErrorDomain] && error.code == XCDYouTubeErrorUseCipherSignature)
-		{
-			self.noStreamVideo = error.userInfo[XCDYouTubeNoStreamVideoUserInfoKey];
-			
-			[self startWatchPageRequest];
-		}
-		else
-		{
-			self.lastError = error;
-			if (error.userInfo[NSLocalizedDescriptionKey])
-				self.youTubeError = error;
-			
-			[self startNextRequest];
-		}
-	}
-}
-
 - (void) handleWebPageWithHTMLString:(NSString *)html
 {
     XCDYouTubeLogDebug(@"Handling web page response");
