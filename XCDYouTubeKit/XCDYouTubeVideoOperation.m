@@ -131,10 +131,10 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) startWatchPageRequest
 {
-    NSDictionary *query = @{ @"v": self.videoIdentifier, @"hl": self.languageIdentifier, @"has_verified": @YES, @"bpctr": @9999999999 };
-    NSString *queryString = XCDQueryStringWithDictionary(query);
-    NSURL *webpageURL = [NSURL URLWithString:[@"https://www.youtube.com/watch?" stringByAppendingString:queryString]];
-    [self startRequestWithURL:webpageURL type:XCDYouTubeRequestTypeWatchPage];
+	NSDictionary *query = @{ @"v": self.videoIdentifier, @"hl": self.languageIdentifier, @"has_verified": @YES, @"bpctr": @9999999999 };
+	NSString *queryString = XCDQueryStringWithDictionary(query);
+	NSURL *webpageURL = [NSURL URLWithString:[@"https://www.youtube.com/watch?" stringByAppendingString:queryString]];
+	[self startRequestWithURL:webpageURL type:XCDYouTubeRequestTypeWatchPage];
 }
 
 - (void) startRequestWithURL:(NSURL *)url type:(XCDYouTubeRequestType)requestType
@@ -175,9 +175,9 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) handleConnectionSuccessWithData:(NSData *)data response:(NSURLResponse *)response requestType:(XCDYouTubeRequestType)requestType
 {
-    CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)response.textEncodingName ?: CFSTR(""));
-    // Use kCFStringEncodingMacRoman as fallback because it defines characters for every byte value and is ASCII compatible. See https://mikeash.com/pyblog/friday-qa-2010-02-19-character-encodings.html
-    NSString *responseString = CFBridgingRelease(CFStringCreateWithBytes(kCFAllocatorDefault, data.bytes, (CFIndex)data.length, encoding != kCFStringEncodingInvalidId ? encoding : kCFStringEncodingMacRoman, false)) ?: @"";
+	CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)response.textEncodingName ?: CFSTR(""));
+	// Use kCFStringEncodingMacRoman as fallback because it defines characters for every byte value and is ASCII compatible. See https://mikeash.com/pyblog/friday-qa-2010-02-19-character-encodings.html
+	NSString *responseString = CFBridgingRelease(CFStringCreateWithBytes(kCFAllocatorDefault, data.bytes, (CFIndex)data.length, encoding != kCFStringEncodingInvalidId ? encoding : kCFStringEncodingMacRoman, false)) ?: @"";
 
 	XCDYouTubeLogVerbose(@"Response: %@\n%@", response, responseString);
 	if ([(NSHTTPURLResponse *)response statusCode] == 429)
@@ -197,7 +197,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 		return;
 	}
 
-    [self handleWebPageWithHTMLString:responseString];
+	[self handleWebPageWithHTMLString:responseString];
 }
 
 - (void) handleConnectionError:(NSError *)connectionError requestType:(XCDYouTubeRequestType)requestType
@@ -220,12 +220,12 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) handleWebPageWithHTMLString:(NSString *)html
 {
-    XCDYouTubeLogDebug(@"Handling web page response");
+	XCDYouTubeLogDebug(@"Handling web page response");
 
-    self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
+	self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
 
-    XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:self.webpage.videoInfo playerScript:nil response:nil error:nil];
-    [self finishWithVideo:video];
+	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:self.webpage.videoInfo playerScript:nil response:nil error:nil];
+	[self finishWithVideo:video];
 }
 
 /* For possible use with Live videos. Still unsure this is the path to display Live videos
