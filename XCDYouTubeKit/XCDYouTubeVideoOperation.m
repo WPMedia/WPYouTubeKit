@@ -14,8 +14,9 @@
 #import "XCDYouTubeLogger+Private.h"
 
 typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
-    XCDYouTubeRequestTypeWatchPage,
-    XCDYouTubeRequestTypeDashManifest,
+    // Removed other enums but keeps raw values for remaining ones
+    XCDYouTubeRequestTypeWatchPage = 2,
+    XCDYouTubeRequestTypeDashManifest = 5,
 };
 
 @interface XCDYouTubeVideoOperation ()

@@ -142,6 +142,7 @@
 	
 	if (httpResponse.statusCode != 200 && httpResponse.statusCode != 206)
 	{
+		completionHandler(NSURLSessionResponseCancel);
 		//statusCode is not 200 and isn't 206
 		//Bad server response
 		[self finish];
@@ -150,6 +151,7 @@
 	
 	if (httpResponse.statusCode != 206)
 	{
+		completionHandler(NSURLSessionResponseCancel);
 		// Does not support partial content so we will simply finish the operation.
 		// Continuing will cause us to download the entire file
 		[self finish];
