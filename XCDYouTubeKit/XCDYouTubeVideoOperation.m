@@ -122,6 +122,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	return [self initWithVideoIdentifier:videoIdentifier languageIdentifier:languageIdentifier cookies:cookies customPatterns:nil];
 }
 
+
 #pragma mark - Requests
 
 - (void) startNextRequest
@@ -170,6 +171,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	
 	self.requestType = requestType;
 }
+
 
 #pragma mark - Response Dispatch
 
@@ -226,6 +228,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	[self startNextRequest];
 }
 
+
 #pragma mark - Response Parsing
 
 - (void) handleWebPageWithHTMLString:(NSString *)html
@@ -276,6 +279,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	[self finishWithVideo:self.lastSuccessfulVideo];
 }
 
+
 #pragma mark - Finish Operation
 
 - (void) finishWithVideo:(XCDYouTubeVideo *)video
@@ -304,6 +308,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	self.isExecuting = NO;
 	self.isFinished = YES;
 }
+
 
 #pragma mark - NSOperation
 
