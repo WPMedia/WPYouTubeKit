@@ -125,11 +125,6 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 #pragma mark - Requests
 
-- (void) startNextRequest
-{
-    [self startWatchPageRequest];
-}
-
 - (void) startWatchPageRequest
 {
 	NSDictionary *query = @{ @"v": self.videoIdentifier, @"hl": self.languageIdentifier, @"has_verified": @YES, @"bpctr": @9999999999 };
@@ -225,7 +220,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 								NSUnderlyingErrorKey: connectionError };
 	self.lastError = [NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorNetwork userInfo:userInfo];
 	
-	[self startNextRequest];
+	[self startWatchPageRequest];
 }
 
 
@@ -340,7 +335,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	self.isExecuting = YES;
 	
 	self.eventLabels = [[NSMutableArray alloc] initWithArray:@[ @"embedded", @"detailpage" ]];
-	[self startNextRequest];
+	[self startWatchPageRequest];
 }
 
 - (void) cancel
