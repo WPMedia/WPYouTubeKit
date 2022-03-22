@@ -197,12 +197,22 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 		return;
 	}
 
-	[self handleWebPageWithHTMLString:responseString];
+	switch (requestType)
+	{
+		case XCDYouTubeRequestTypeWatchPage:
+			[self handleWebPageWithHTMLString:responseString];
+			break;
+		case XCDYouTubeRequestTypeDashManifest:
+			[self handleDashManifestWithXMLString:responseString response:response];
+			break;
+	}
 }
 
 - (void) handleConnectionError:(NSError *)connectionError requestType:(XCDYouTubeRequestType)requestType
 {
-	//Shoud not return a connection error if was as a result of requesting the Dash Manifiest (we have a sucessfully created `XCDYouTubeVideo` and should just finish the operation as if were a 'sucessful' one
+	// Should not return a connection error if was as a result of requesting the Dash Manifiest
+	// (we have a sucessfully created `XCDYouTubeVideo` and should just finish the operation as
+	// if were a 'successful' one
 	if (requestType == XCDYouTubeRequestTypeDashManifest)
 	{
 		[self finishWithVideo:self.lastSuccessfulVideo];
@@ -223,12 +233,37 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	XCDYouTubeLogDebug(@"Handling web page response");
 
 	self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
-
-	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:self.webpage.videoInfo playerScript:nil response:nil error:nil];
-	[self finishWithVideo:video];
+	[self handleVideoInfoResponseWithInfo:self.webpage.videoInfo];
 }
 
-/* For possible use with Live videos. Still unsure this is the path to display Live videos
+- (void) handleVideoInfoResponseWithInfo:(NSDictionary *)info
+{
+	XCDYouTubeLogDebug(@"Handling video info response");
+
+	NSError *error = nil;
+	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info playerScript:nil response:nil error:&error];
+	if (video)
+	{
+		self.lastSuccessfulVideo = video;
+
+		// In the rare case DASH Manifest is present in info...
+		if (info[@"dashmpd"])
+		{
+			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)info[@"dashmpd"]];
+			// Extract and merge to video...
+			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
+			return;
+		}
+		[video mergeVideo:self.noStreamVideo];
+		// ...otherwise just send the video we already have
+		[self finishWithVideo:video];
+	}
+}
+
+    // For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
+    // HTTP), a process that where "client side receives a manifest file, from which it chooses what
+    // type of video quality will it receive, depending on the throughput the client has." Keeping this
+    // in the rare case a video uses it.
 - (void) handleDashManifestWithXMLString:(NSString *)XMLString response:(NSURLResponse *)response
 {
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
@@ -240,7 +275,6 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	
 	[self finishWithVideo:self.lastSuccessfulVideo];
 }
-*/
 
 #pragma mark - Finish Operation
 
