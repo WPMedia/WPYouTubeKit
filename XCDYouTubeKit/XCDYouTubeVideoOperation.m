@@ -220,7 +220,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 								NSUnderlyingErrorKey: connectionError };
 	self.lastError = [NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorNetwork userInfo:userInfo];
 	
-	[self startWatchPageRequest];
+	[self finishWithError];
 }
 
 
@@ -255,7 +255,16 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 		[video mergeVideo:self.noStreamVideo];
 		// ...otherwise just send the video we already have
 		[self finishWithVideo:video];
-	}
+    }
+    else
+    {
+        self.lastError = error;
+        if (error.userInfo[NSLocalizedDescriptionKey])
+        {
+            self.youTubeError = error;
+        }
+        [self finishWithError];
+    }
 }
 
     // For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
