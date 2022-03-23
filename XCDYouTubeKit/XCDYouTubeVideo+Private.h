@@ -4,8 +4,6 @@
 
 #import "XCDYouTubeVideo.h"
 
-#import "XCDYouTubePlayerScript.h"
-
 #define XCDYouTubeErrorUseCipherSignature -1000
 
 extern NSString *const XCDYouTubeNoStreamVideoUserInfoKey;
@@ -20,7 +18,7 @@ extern NSDictionary *XCDStreamingDataWithString(NSString *string);
 
 @interface XCDYouTubeVideo ()
 
-- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info playerScript:(XCDYouTubePlayerScript *)playerScript response:(NSURLResponse *)response error:(NSError **)error;
+- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info response:(NSURLResponse *)response error:(NSError **)error;
 
 - (void) mergeVideo:(XCDYouTubeVideo *)video;
 - (void) mergeDashManifestStreamURLs:(NSDictionary *)dashManifestStreamURLs;

@@ -160,7 +160,7 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 	return expire > 0 ? [NSDate dateWithTimeIntervalSince1970:expire] : nil;
 }
 
-- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info playerScript:(XCDYouTubePlayerScript *)playerScript response:(NSURLResponse *)response error:(NSError * __autoreleasing *)error
+- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info response:(NSURLResponse *)response error:(NSError * __autoreleasing *)error
 {
 	if (!(self = [super init]))
 		return nil; // LCOV_EXCL_LINE
@@ -297,7 +297,7 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 		}
 		
 		NSError *streamURLsError;
-		NSDictionary *mainStreamURLs = [self extractStreamURLsWithQuery:streamQueries.count == 0 ? alternativeStreamQueries : streamQueries playerScript:playerScript userInfo:userInfo error:&streamURLsError];
+		NSDictionary *mainStreamURLs = [self extractStreamURLsWithQuery:streamQueries.count == 0 ? alternativeStreamQueries : streamQueries userInfo:userInfo error:&streamURLsError];
 		if (mainStreamURLs)
 			[streamURLs addEntriesFromDictionary:mainStreamURLs];
 		
@@ -401,7 +401,7 @@ static NSString *XCDReasonForErrorWithDictionary(NSDictionary *info, NSString *p
 	return reason;
 }
 
-- (NSDictionary <id, NSURL *>*)extractStreamURLsWithQuery:(NSArray *)streamQueries playerScript:(XCDYouTubePlayerScript *)playerScript userInfo:(NSMutableDictionary *)userInfo error:(NSError *__autoreleasing *)error
+- (NSDictionary <id, NSURL *>*)extractStreamURLsWithQuery:(NSArray *)streamQueries userInfo:(NSMutableDictionary *)userInfo error:(NSError *__autoreleasing *)error
 {
 	NSMutableDictionary *streamURLs = [NSMutableDictionary new];
 	
@@ -418,46 +418,12 @@ static NSString *XCDReasonForErrorWithDictionary(NSDictionary *info, NSString *p
 		{
 			stream = XCDDictionaryWithQueryString((NSString *)streamQuery);
 		}
-		NSDictionary *alternativeStreamInfo = XCDDictionaryWithQueryString(stream[@"cipher"]).count == 0? XCDDictionaryWithQueryString(stream[@"signatureCipher"]) : XCDDictionaryWithQueryString(stream[@"cipher"]);
-		NSString *alternativeURLString = alternativeStreamInfo[@"url"];
-		
-		NSString *scrambledSignature = stream[@"s"] == nil? alternativeStreamInfo[@"s"] : stream[@"s"];
-		NSString *spParam = stream[@"sp"] == nil ? alternativeStreamInfo[@"sp"] : stream[@"sp"];
 
-		if (scrambledSignature == nil)
-			XCDYouTubeLogInfo(@"No scrambled signature for stream: \n%@ This might result in a error.", stream);
-		if (scrambledSignature && !playerScript)
-		{
-			userInfo[XCDYouTubeNoStreamVideoUserInfoKey] = self;
-			if (error)
-				*error = [NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorUseCipherSignature userInfo:userInfo];
-			
-			return nil;
-		}
-		NSString *signature = [playerScript unscrambleSignature:scrambledSignature];
-		if (playerScript && scrambledSignature && !signature)
-			continue;
-		
-		NSString *urlString = stream[@"url"] == nil ? alternativeURLString : stream[@"url"];
+		NSString *urlString = stream[@"url"];
 		NSString *itag = stream[@"itag"];
 		if (urlString && itag)
 		{
 			NSURL *streamURL = [NSURL URLWithString:urlString];
-			
-			if (signature)
-			{
-				NSString *escapedSignature = [signature stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
-				
-				if (spParam.length > 0)
-				{
-					streamURL = URLBySettingParameter(streamURL, spParam, escapedSignature);
-					
-				} else
-				{
-					streamURL = URLBySettingParameter(streamURL, @"signature", escapedSignature);
-				}
-			}
-			
 			streamURLs[@(itag.integerValue)] = URLBySettingParameter(streamURL, @"ratebypass", @"yes");
 		}
 	}

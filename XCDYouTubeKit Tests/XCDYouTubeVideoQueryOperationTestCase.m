@@ -18,7 +18,7 @@ extern XCDYouTubeVideo *XCDYouTubeVideoQueryOperationVideo(void);
 
 XCDYouTubeVideo *XCDYouTubeVideoQueryOperationVideo()
 {
-	return [[XCDYouTubeVideo alloc] initWithIdentifier:@"video1" info:@{ @"url_encoded_fmt_stream_map": @"url=http://www.youtube.com/video1.mp4&itag=123"} playerScript:nil response:nil error:NULL];
+	return [[XCDYouTubeVideo alloc] initWithIdentifier:@"video1" info:@{ @"url_encoded_fmt_stream_map": @"url=http://www.youtube.com/video1.mp4&itag=123"} response:nil error:NULL];
 }
 
 - (void) testNilVideoInInitializer

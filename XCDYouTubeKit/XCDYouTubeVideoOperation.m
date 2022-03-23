@@ -10,7 +10,6 @@
 #import "XCDYouTubeError.h"
 #import "XCDYouTubeVideoWebpage.h"
 #import "XCDYouTubeDashManifestXML.h"
-#import "XCDYouTubePlayerScript.h"
 #import "XCDYouTubeLogger+Private.h"
 
 typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
@@ -38,7 +37,6 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 
 @property (atomic, strong) XCDYouTubeVideoWebpage *webpage;
 @property (atomic, strong) XCDYouTubeVideoWebpage *embedWebpage;
-@property (atomic, strong) XCDYouTubePlayerScript *playerScript;
 @property (atomic, strong) XCDYouTubeVideo *noStreamVideo;
 @property (atomic, strong) NSError *lastError;
 @property (atomic, strong) NSError *youTubeError; // Error actually coming from the YouTube API, i.e. explicit and localized error
@@ -138,8 +136,10 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	if (self.isCancelled)
 		return;
 	
-	// Max (age-restricted VEVO) = 2×GetVideoInfo + 1×WatchPage + 2×EmbedPage + 1×JavaScriptPlayer + 1×GetVideoInfo + 1xDashManifest
-	if (++self.requestCount > 8)
+	// Downsized from original 8 which included embed page, get info requests.
+    // Here we only should have two requests max: One from the start watch page and in
+    // the rare case of the dash manifest request.
+	if (++self.requestCount > 2)
 	{
 		// This condition should never happen but the request flow is quite complex so better abort here than go into an infinite loop of requests
 		[self finishWithError];
@@ -239,7 +239,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	XCDYouTubeLogDebug(@"Handling video info response");
 
 	NSError *error = nil;
-	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info playerScript:nil response:nil error:&error];
+	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info response:nil error:&error];
 	if (video)
 	{
 		self.lastSuccessfulVideo = video;
