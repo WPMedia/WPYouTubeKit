@@ -36,7 +36,7 @@ NSString *XCDHTTPLiveStreamingStringWithString(NSString *string)
 	return manifestURL;
 }
 
-NSArray <NSDictionary *> *XCDThumnailArrayWithString(NSString *string)
+NSArray <NSDictionary *> *XCDThumbnailArrayWithString(NSString *string)
 {
 	NSError *error = nil;
 	NSData *data = [string dataUsingEncoding:NSUTF8StringEncoding];
@@ -222,7 +222,7 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 		_thumbnailURL = thumbnailURL;
 		
 		if (!_thumbnailURL) {
-			NSArray<NSDictionary *> *thumbnails = XCDThumnailArrayWithString(playerResponse);
+			NSArray<NSDictionary *> *thumbnails = videoDetails[@"thumbnail"][@"thumbnails"] ?: XCDThumbnailArrayWithString(playerResponse);
 			if (thumbnails.count >= 1) {
 				// Prepare array of thumbnails URLs.
 				NSMutableArray<NSURL *> *thumbnailURLs = [[NSMutableArray<NSURL *> alloc] initWithCapacity:thumbnails.count];
