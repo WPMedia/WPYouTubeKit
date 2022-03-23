@@ -160,7 +160,7 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 	return expire > 0 ? [NSDate dateWithTimeIntervalSince1970:expire] : nil;
 }
 
-- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info response:(NSURLResponse *)response error:(NSError * __autoreleasing *)error
+- (instancetype) initWithIdentifier:(NSString *)identifier info:(NSDictionary *)info error:(NSError * __autoreleasing *)error
 {
 	if (!(self = [super init]))
 		return nil; // LCOV_EXCL_LINE
@@ -176,7 +176,7 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 	NSDictionary *videoDetails = XCDDictionaryWithString(playerResponse)[@"videoDetails"] == nil ? info[@"videoDetails"] : XCDDictionaryWithString(playerResponse)[@"videoDetails"];
 	NSString *multiCameraMetadataMap = XCDDictionaryWithString(playerResponse)[@"multicamera"][@"playerLegacyMulticameraRenderer"][@"metadataList"];
 	
-	NSMutableDictionary *userInfo = response.URL ? [@{ NSURLErrorKey: (id)response.URL } mutableCopy] : [NSMutableDictionary new];
+	NSMutableDictionary *userInfo = [NSMutableDictionary new];
 	
 	if (streamMap.length > 0 || httpLiveStream.length > 0 || alternativeStreamMap.count > 0 || alternativeAdaptiveFormats.count > 0)
 	{
