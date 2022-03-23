@@ -697,20 +697,6 @@
 	[self waitForExpectationsWithTimeout:5 handler:nil];
 }
 
-- (void) testGeoblockedVideo
-{
-	__weak XCTestExpectation *expectation = [self expectationWithDescription:@""];
-	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"Exf63KPXF6w" completionHandler:^(XCDYouTubeVideo *video, NSError *error)
-	{
-		XCTAssertNil(video);
-		XCTAssertEqualObjects(error.domain, XCDYouTubeVideoErrorDomain);
-		XCTAssertEqual(error.code, XCDYouTubeErrorNoStreamAvailable);
-		XCTAssertEqualObjects(error.localizedDescription, @"The uploader has not made this video available in your country.");
-		[expectation fulfill];
-	}];
-	[self waitForExpectationsWithTimeout:5 handler:nil];
-}
-
 - (void) testInvalidVideoIdentifier
 {
 	__weak XCTestExpectation *expectation = [self expectationWithDescription:@""];
@@ -836,26 +822,6 @@
 	[expectation performSelector:@selector(fulfill) withObject:nil afterDelay:0.2];
 	[operation cancel];
 	[self waitForExpectationsWithTimeout:1 handler:nil];
-}
-
-- (void) testCancelingOperationQueryOperation
-{
-	__weak XCTestExpectation *expectation = [self expectationWithDescription:@""];
-	__block XCDYouTubeVideoQueryOperation *operation = nil;
-	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"6kLq3WMV1nU" completionHandler:^(XCDYouTubeVideo *video, NSError *error)
-	 {
-		XCTAssertNotNil(video);
-		
-		operation = [[XCDYouTubeClient defaultClient] queryVideo:video cookies:nil completionHandler:^(NSDictionary * _Nonnull streamURLs, NSError * _Nullable queryError, NSDictionary<id,NSError *> * _Nonnull streamErrors)
-		{
-			XCTFail();
-		}];
-		
-		[operation cancel];
-		[expectation fulfill];
-	}];
-	
-	[self waitForExpectationsWithTimeout:5 handler:nil];
 }
 
 - (void) testNilCompletionHandler
