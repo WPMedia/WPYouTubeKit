@@ -240,24 +240,23 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 	NSError *error = nil;
 	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info response:nil error:&error];
-	if (video)
+	if (video && video.streamURLs)
 	{
-		self.lastSuccessfulVideo = video;
-
-		// In the rare case we need to use the DASH Manifest to get streamURLs...
-		if (info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])
-		{
-            // Extract manifest's url and merge to video...
-            NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
-			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
-			return;
-		}
-		[video mergeVideo:self.noStreamVideo];
-		// ...otherwise just send the video we already have
-		[self finishWithVideo:video];
+        [self finishWithVideo:video];
     }
     else
     {
+        self.lastSuccessfulVideo = video;
+
+        // In the rare case we need to use the DASH Manifest to get streamURLs...
+        if (info[@"streamingData"][@"dashManifestUrl"] ?: info[@"dashmpd"])
+        {
+            // Extract manifest's url and merge to video...
+            NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
+            [self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
+            return;
+        }
+
         self.lastError = error;
         if (error.userInfo[NSLocalizedDescriptionKey])
         {
