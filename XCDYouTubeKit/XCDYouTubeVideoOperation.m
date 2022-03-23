@@ -276,9 +276,9 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
 	
 	XCDYouTubeDashManifestXML *dashManifestXML = [[XCDYouTubeDashManifestXML alloc]initWithXMLString:XMLString];
-	NSDictionary *dashhManifestStreamURLs = dashManifestXML.streamURLs;
-	if (dashhManifestStreamURLs)
-		[self.lastSuccessfulVideo mergeDashManifestStreamURLs:dashhManifestStreamURLs];
+	NSDictionary *dashManifestStreamURLs = dashManifestXML.streamURLs;
+	if (dashManifestStreamURLs)
+		[self.lastSuccessfulVideo mergeDashManifestStreamURLs:dashManifestStreamURLs];
 	
 	[self finishWithVideo:self.lastSuccessfulVideo];
 }
