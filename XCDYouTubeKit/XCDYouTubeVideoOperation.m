@@ -244,11 +244,11 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	{
 		self.lastSuccessfulVideo = video;
 
-		// In the rare case DASH Manifest is present in info...
-		if (info[@"dashmpd"])
+		// In the rare case we need to use the DASH Manifest to get streamURLs...
+		if (info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])
 		{
-			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)info[@"dashmpd"]];
-			// Extract and merge to video...
+            // Extract manifest's url and merge to video...
+            NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
 			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
 			return;
 		}
@@ -270,7 +270,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
     // For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
     // HTTP), a process that where "client side receives a manifest file, from which it chooses what
     // type of video quality will it receive, depending on the throughput the client has." Keeping this
-    // in the rare case a video uses it.
+    // in the rare case that it's the only option to obtain streamURLs.
 - (void) handleDashManifestWithXMLString:(NSString *)XMLString response:(NSURLResponse *)response
 {
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
