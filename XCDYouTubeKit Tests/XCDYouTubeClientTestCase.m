@@ -77,7 +77,7 @@
 {
 	__weak XCTestExpectation *expectation = [self expectationWithDescription:@""];
 	
-	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"sBHFOh5qe20" completionHandler:^(XCDYouTubeVideo *mainVideo, NSError *error)
+	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"HMVCVH2mL08" completionHandler:^(XCDYouTubeVideo *mainVideo, NSError *error)
 	{
 		XCTAssertNil(error);
 		XCTAssertNotNil(mainVideo.videoIdentifiers);
