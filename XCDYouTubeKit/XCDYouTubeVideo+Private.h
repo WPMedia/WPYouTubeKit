@@ -10,7 +10,6 @@ extern NSString *const XCDYouTubeNoStreamVideoUserInfoKey;
 
 extern NSDictionary *XCDDictionaryWithQueryString(NSString *string);
 extern NSString *XCDQueryStringWithDictionary(NSDictionary *dictionary);
-extern NSArray *XCDCaptionArrayWithString(NSString *string);
 extern NSArray *XCDThumbnailArrayWithString(NSString *string);
 extern NSString *XCDHTTPLiveStreamingStringWithString(NSString *string);
 extern NSDictionary *XCDDictionaryWithString(NSString *string);
