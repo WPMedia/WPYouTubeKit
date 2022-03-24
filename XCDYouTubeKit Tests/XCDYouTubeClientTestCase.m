@@ -414,12 +414,12 @@
 - (void) testThatQueryingLiveVideoReturnsPlayableStreams
 {
 	/**
-	 * This video `hHW1oY26kxQ` is a live stream
+	 * This video `AdUw5RdyZxI` is a live stream
 	 * See https://github.com/0xced/XCDYouTubeKit/issues/456 for more information.
 	 */
 	__weak XCTestExpectation *expectation = [self expectationWithDescription:@""];
 	
-	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"hHW1oY26kxQ" completionHandler:^(XCDYouTubeVideo *video, NSError *error)
+	[[XCDYouTubeClient defaultClient] getVideoWithIdentifier:@"AdUw5RdyZxI" completionHandler:^(XCDYouTubeVideo *video, NSError *error)
 	{
 		XCTAssertNotNil(video);
 		XCTAssertNil(error);
