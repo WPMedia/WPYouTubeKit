@@ -11,7 +11,6 @@
 
 NSString *const XCDYouTubeVideoErrorDomain = @"XCDYouTubeVideoErrorDomain";
 NSString *const XCDYouTubeAllowedCountriesUserInfoKey = @"AllowedCountries";
-NSString *const XCDYouTubeNoStreamVideoUserInfoKey = @"NoStreamVideo";
 NSString *const XCDYouTubeVideoQualityHTTPLiveStreaming = @"HTTPLiveStreaming";
 
 
@@ -34,23 +33,6 @@ NSString *XCDHTTPLiveStreamingStringWithString(NSString *string)
 	if (manifestURL.length == 0) { return nil; }
 	
 	return manifestURL;
-}
-
-NSArray <NSDictionary *> *XCDThumbnailArrayWithString(NSString *string)
-{
-	NSError *error = nil;
-	NSData *data = [string dataUsingEncoding:NSUTF8StringEncoding];
-	if (!data) { return nil; }
-	NSDictionary *JSON = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
-	
-	if (error) { return nil; }
-	
-	NSDictionary *videoDetails = JSON[@"videoDetails"];
-	NSDictionary *thumbnail = videoDetails[@"thumbnail"];
-	NSArray *thumbnails = thumbnail[@"thumbnails"];
-	
-	if (thumbnails.count == 0 || thumbnails == nil)  { return nil; }
-	return thumbnails;
 }
 
 NSDictionary *XCDDictionaryWithString(NSString *string)
@@ -156,8 +138,6 @@ static NSDate * ExpirationDate(NSURL *streamURL)
     NSString *httpLiveStream = info[@"streamingData"][@"hlsManifestUrl"] ?: info[@"hlsvp"] ?: XCDHTTPLiveStreamingStringWithString(playerResponse);
 	NSString *adaptiveFormats = info[@"adaptive_fmts"];
 	NSArray *alternativeAdaptiveFormats = XCDStreamingDataWithString(playerResponse)[@"adaptiveFormats"]  == nil ? info[@"streamingData"][@"adaptiveFormats"] : XCDStreamingDataWithString(playerResponse)[@"adaptiveFormats"];
-	NSDictionary *videoDetails = XCDDictionaryWithString(playerResponse)[@"videoDetails"] == nil ? info[@"videoDetails"] : XCDDictionaryWithString(playerResponse)[@"videoDetails"];
-	NSString *multiCameraMetadataMap = info[@"multicamera"][@"playerLegacyMulticameraRenderer"][@"metadataList"] ?: XCDDictionaryWithString(playerResponse)[@"multicamera"][@"playerLegacyMulticameraRenderer"][@"metadataList"];
 	
 	NSMutableDictionary *userInfo = [NSMutableDictionary new];
 	
@@ -174,62 +154,6 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 			streamQueries = [NSMutableArray new];
 			[streamQueries addObjectsFromArray:alternativeStreamMap];
 			[streamQueries addObjectsFromArray:alternativeAdaptiveFormats];
-		}
-		
-		NSString *title = info[@"title"] == nil? videoDetails[@"title"] : info[@"title"];
-		if (title == nil)
-			title = @"";
-		_title = title;
-		
-		NSString *author = info[@"author"] == nil? videoDetails[@"author"] : info[@"author"];
-		if (author == nil)
-			author = @"";
-		_author = author;
-		
-		NSString *channelIdentifier = info[@"ucid"] == nil? videoDetails[@"channelId"] : info[@"ucid"];
-		if (channelIdentifier == nil)
-			channelIdentifier = @"";
-		_channelIdentifier = channelIdentifier;
-		
-		NSString *description = videoDetails[@"shortDescription"];
-		if (description == nil)
-			description = @"";
-		_videoDescription = description;
-		
-		_viewCount = info[@"viewCount"] == nil? [(NSString *)videoDetails[@"viewCount"] integerValue] : [(NSString *)info[@"viewCount"] integerValue];
-		
-		_duration = info[@"length_seconds"] == nil? [(NSString *)videoDetails[@"lengthSeconds"] doubleValue] : [(NSString *)info[@"length_seconds"] doubleValue];
-		
-		NSString *thumbnail = info[@"thumbnail_url"] ?: info[@"iurl"];
-		NSURL *thumbnailURL = thumbnail ? [NSURL URLWithString:thumbnail] : nil;
-		_thumbnailURL = thumbnailURL;
-		
-		if (!_thumbnailURL) {
-			NSArray<NSDictionary *> *thumbnails = videoDetails[@"thumbnail"][@"thumbnails"] ?: XCDThumbnailArrayWithString(playerResponse);
-			if (thumbnails.count >= 1) {
-				// Prepare array of thumbnails URLs.
-				NSMutableArray<NSURL *> *thumbnailURLs = [[NSMutableArray<NSURL *> alloc] initWithCapacity:thumbnails.count];
-				
-				// Extract URLs.
-				for (NSDictionary *thumbnailDict in thumbnails) {
-					NSString *urlStr = thumbnailDict[@"url"];
-					NSURL *url = [NSURL URLWithString:urlStr];
-					if (url) {
-						[thumbnailURLs addObject:url];
-					}
-				}
-				
-				// Set array.
-				_thumbnailURLs = [thumbnailURLs copy];
-				
-				// DEPRECATED
-				NSString *thumbnailURLString = thumbnails[0][@"url"];
-				_thumbnailURL = thumbnailURLString ? [NSURL URLWithString:thumbnailURLString] : nil;
-			}
-		}
-		else
-		{
-			_thumbnailURLs = [NSArray arrayWithObject:thumbnailURL];
 		}
 		
 		NSMutableDictionary *streamURLs = [NSMutableDictionary new];
@@ -265,34 +189,6 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 				_expirationDate = ExpirationDate(streamURL);
 				break;
 			}
-		}
-		
-		NSMutableArray *videoIdentifiers = [NSMutableArray new];
-		
-		NSArray<NSString *>*multiCameraMetadata = [multiCameraMetadataMap componentsSeparatedByString:@","];
-		for (NSString *cameraMetadata in multiCameraMetadata)
-		{
-			NSArray<NSString *>*metadata = [cameraMetadata componentsSeparatedByString:@"&"];
-			if (metadata.count == 0)
-			{
-				continue;
-			}
-			if ([metadata.firstObject rangeOfString:@"id"].location == NSNotFound)
-			{
-				continue;
-			}
-			NSString *videoIdentifier = [metadata.firstObject componentsSeparatedByString:@"="].lastObject;
-			if ([videoIdentifier isEqualToString:identifier])
-			{
-				continue;
-			}
-			
-			[videoIdentifiers addObject:videoIdentifier];
-		}
-		
-		if (videoIdentifiers.count != 0)
-		{
-			_videoIdentifiers = videoIdentifiers.copy;
 		}
 		
 		_streamURL =  _streamURLs[XCDYouTubeVideoQualityHTTPLiveStreaming] ?: _streamURLs[@(XCDYouTubeVideoQualityHD720)] ?: _streamURLs[@(XCDYouTubeVideoQualityMedium360)] ?: _streamURLs[@(XCDYouTubeVideoQualitySmall240)];

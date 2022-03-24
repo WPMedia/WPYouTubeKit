@@ -29,11 +29,4 @@
 	XCTAssertNoThrow(@{ videoA: @5 });
 }
 
-- (void) testDescription
-{
-	XCDYouTubeVideo *videoA = [[XCDYouTubeVideo alloc] initWithIdentifier:@"videoA" info:@{ @"url_encoded_fmt_stream_map": @"url=http://www.youtube.com/videoA.mp4&itag=123", @"title": @"Video Title" } error:NULL];
-	XCTAssertEqualObjects(videoA.description, @"[videoA] Video Title");
-	XCTAssertTrue([videoA.debugDescription rangeOfString:videoA.description].location != NSNotFound && videoA.debugDescription.length > videoA.description.length);
-}
-
 @end
