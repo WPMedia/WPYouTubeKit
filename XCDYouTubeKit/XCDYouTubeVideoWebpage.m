@@ -80,6 +80,13 @@ static NSDictionary *XCDPlayerConfigurationWithString(NSString *html, NSString *
 		if (args == nil)
 		{
 			_videoInfo = XCDPlayerConfigurationWithString(self.html, @"ytInitialPlayerResponse\\s*=\\s*(\\{.+?\\})\\s*;");
+
+			// If info is still nil, check for an error videoInfo
+			if (!_videoInfo)
+			{
+				_videoInfo = XCDPlayerConfigurationWithString(self.html, @"\\[\"ytInitialPlayerResponse\"\\]\\s*=\\s*(\\{.+?\\})\\s*;");
+			}
+
 			return _videoInfo;
 		}
 		if ([args isKindOfClass:[NSDictionary class]])

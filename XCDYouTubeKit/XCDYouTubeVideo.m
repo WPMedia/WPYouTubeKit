@@ -323,8 +323,8 @@ static NSDate * ExpirationDate(NSURL *streamURL)
 
 static NSString *XCDReasonForErrorWithDictionary(NSDictionary *info, NSString *playerResponse)
 {
-	NSString *reason = info[@"reason"] == nil ? XCDDictionaryWithString(playerResponse)[@"playabilityStatus"][@"reason"] : info[@"reason"];
-	NSDictionary *subReason =  XCDDictionaryWithString(playerResponse)[@"playabilityStatus"][@"errorScreen"][@"playerErrorMessageRenderer"][@"subreason"];
+	NSString *reason = info[@"playabilityStatus"][@"reason"] ?: info[@"reason"] ?: XCDDictionaryWithString(playerResponse)[@"playabilityStatus"][@"reason"];
+	NSDictionary *subReason = info[@"playabilityStatus"][@"errorScreen"][@"playerErrorMessageRenderer"][@"subreason"] ?: XCDDictionaryWithString(playerResponse)[@"playabilityStatus"][@"errorScreen"][@"playerErrorMessageRenderer"][@"subreason"];
 	NSArray<NSDictionary *>* runs = subReason[@"runs"];
 	NSString *runsMessage = @"";
 	for (NSDictionary *message in runs)
