@@ -23,7 +23,6 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 @property (atomic, copy, readonly) NSString *languageIdentifier;
 @property (atomic, strong, readonly) NSArray <NSHTTPCookie *> *cookies;
 @property (atomic, strong, readonly) NSArray <NSString *> *customPatterns;
-@property (atomic, assign) BOOL ranLastEmbedPage;
 @property (atomic, assign) NSInteger requestCount;
 @property (atomic, assign) XCDYouTubeRequestType requestType;
 @property (atomic, strong) NSMutableArray *eventLabels;
@@ -32,14 +31,12 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 @property (atomic, strong) NSURLSessionDataTask *dataTask;
 
 @property (atomic, assign) BOOL isExecuting;
-@property (atomic, assign) BOOL isFinished;
+@property (atomic, assign) BOOL isFinished;		
 @property (atomic, readonly) dispatch_semaphore_t operationStartSemaphore;
 
 @property (atomic, strong) XCDYouTubeVideoWebpage *webpage;
-@property (atomic, strong) XCDYouTubeVideoWebpage *embedWebpage;
-@property (atomic, strong) XCDYouTubeVideo *noStreamVideo;
 @property (atomic, strong) NSError *lastError;
-@property (atomic, strong) NSError *youTubeError; // Error actually coming from the YouTube API, i.e. explicit and localized error
+@property (atomic, strong) NSError *youTubeError; // Error from YouTube API, i.e. explicit and localized error
 
 @property (atomic, strong, readwrite) NSError *error;
 @property (atomic, strong, readwrite) XCDYouTubeVideo *video;

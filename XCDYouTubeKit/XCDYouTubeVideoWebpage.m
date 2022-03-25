@@ -14,8 +14,6 @@
 @synthesize playerConfiguration = _playerConfiguration;
 @synthesize playerContextConfiguration = _playerContextConfiguration;
 @synthesize videoInfo = _videoInfo;
-@synthesize sts = _sts;
-@synthesize javaScriptPlayerURL = _javaScriptPlayerURL;
 @synthesize isAgeRestricted = _isAgeRestricted;
 @synthesize regionsAllowed = _regionsAllowed;
 
@@ -101,83 +99,6 @@ static NSDictionary *XCDPlayerConfigurationWithString(NSString *html, NSString *
 		}
 	}
 	return _videoInfo;
-}
-
-- (NSString *)sts
-{
-	if (!_sts)
-	{
-		NSString *sts = [(NSString *)self.playerConfiguration[@"sts"] description];
-		if (sts != nil) {
-			_sts = sts;
-			return _sts;
-		} else {
-			NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\"sts\"\\s*:\\s*(\\d+)" options:0 error:nil];
-			NSTextCheckingResult *result = [regex firstMatchInString:self.html options:(NSMatchingOptions)0 range:NSMakeRange(0, self.html.length)];
-			if (result.numberOfRanges < 2)
-				return _sts;
-			
-			NSRange range = [result rangeAtIndex:1];
-			if (range.length == 0)
-				return _sts;
-			
-			_sts = [self.html substringWithRange:range];
-		}
-	}
-	
-	return _sts;
-}
-
-static NSURL *XCDJavaScriptPlayerURLFromString(NSString *javaScriptString)
-{
-	NSString *javaScriptPlayerURLString = javaScriptString;
-	if ([javaScriptString hasPrefix:@"//"])
-		javaScriptPlayerURLString = [@"https:" stringByAppendingString:javaScriptString];
-	else if ([javaScriptString hasPrefix:@"/"])
-		javaScriptPlayerURLString = [@"https://www.youtube.com" stringByAppendingString:javaScriptString];
-	
-	return [NSURL URLWithString:javaScriptPlayerURLString];
-}
-
-- (NSURL *) javaScriptPlayerURL
-{
-	if (!_javaScriptPlayerURL)
-	{
-		NSString *jsAssets = [self.playerConfiguration valueForKeyPath:@"assets.js"];
-		if ([jsAssets isKindOfClass:[NSString class]])
-		{
-			_javaScriptPlayerURL = XCDJavaScriptPlayerURLFromString(jsAssets);
-		}
-		else
-		{
-			NSArray<NSString *>*patterns = @[@"<script[^>]+\\bsrc=(\"[^\"]+\")[^>]+\\bname=[\"\\\']player_ias/base", @"jsUrl\"\\s*:\\s*(\"[^\"]+\")", @"\"assets\":.+?\"js\":\\s*(\"[^\"]+\")"];
-			for (NSString *pattern in patterns)
-			{
-				NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
-				NSTextCheckingResult *result = [regex firstMatchInString:self.html options:(NSMatchingOptions)0 range:NSMakeRange(0, self.html.length)];
-				if (result.numberOfRanges < 2)
-				{
-					continue;
-				}
-				
-				NSRange range = [result rangeAtIndex:1];
-				if (range.length == 0)
-				{
-					continue;
-				}
-				
-				NSString *baseURLString = [[[self.html substringWithRange:range] stringByReplacingOccurrencesOfString:@"\"" withString:@""] stringByReplacingOccurrencesOfString:@"\\" withString:@""];
-				NSURL *javaScriptPlayerURL = XCDJavaScriptPlayerURLFromString(baseURLString);
-				if (javaScriptPlayerURL != nil)
-				{
-					_javaScriptPlayerURL = javaScriptPlayerURL;
-					break;
-				}
-				
-			}
-		}
-	}
-	return _javaScriptPlayerURL;
 }
 
 - (BOOL) isAgeRestricted
