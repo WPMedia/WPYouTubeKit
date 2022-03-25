@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 @property (atomic, strong) NSURLSessionDataTask *dataTask;
 
 @property (atomic, assign) BOOL isExecuting;
-@property (atomic, assign) BOOL isFinished;		
+@property (atomic, assign) BOOL isFinished;
 @property (atomic, readonly) dispatch_semaphore_t operationStartSemaphore;
 
 @property (atomic, strong) XCDYouTubeVideoWebpage *webpage;
