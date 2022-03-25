@@ -13,9 +13,9 @@
 #import "XCDYouTubeLogger+Private.h"
 
 typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
-    // Removed other enums but keeps raw values for remaining ones
-    XCDYouTubeRequestTypeWatchPage = 2,
-    XCDYouTubeRequestTypeDashManifest = 5,
+	// Removed other enums but keeps raw values for remaining ones
+	XCDYouTubeRequestTypeWatchPage = 2,
+	XCDYouTubeRequestTypeDashManifest = 5,
 };
 
 @interface XCDYouTubeVideoOperation ()
@@ -137,8 +137,8 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 		return;
 	
 	// Downsized from original 8 which included embed page, get info requests.
-    // Here we only should have two requests max: One from the start watch page and in
-    // the rare case of the dash manifest request.
+	// Here we only should have two requests max: One from the start watch page and in
+	// the rare case of the dash manifest request.
 	if (++self.requestCount > 2)
 	{
 		// This condition should never happen but the request flow is quite complex so better abort here than go into an infinite loop of requests
@@ -242,34 +242,34 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info error:&error];
 	if (video && video.streamURLs)
 	{
-        [self finishWithVideo:video];
-    }
-    else
-    {
-        self.lastSuccessfulVideo = video;
+		[self finishWithVideo:video];
+	}
+	else
+	{
+		self.lastSuccessfulVideo = video;
 
-        // In the rare case we need to use the DASH Manifest to get streamURLs...
-        if (info[@"streamingData"][@"dashManifestUrl"] ?: info[@"dashmpd"])
-        {
-            // Extract manifest's url and merge to video...
-            NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
-            [self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
-            return;
-        }
+		// In the rare case we need to use the DASH Manifest to get streamURLs...
+		if (info[@"streamingData"][@"dashManifestUrl"] ?: info[@"dashmpd"])
+		{
+			// Extract manifest's url and merge to video...
+			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
+			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
+			return;
+		}
 
-        self.lastError = error;
-        if (error.userInfo[NSLocalizedDescriptionKey])
-        {
-            self.youTubeError = error;
-        }
-        [self finishWithError];
-    }
+		self.lastError = error;
+		if (error.userInfo[NSLocalizedDescriptionKey])
+		{
+			self.youTubeError = error;
+		}
+		[self finishWithError];
+	}
 }
 
-    // For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
-    // HTTP), a process that where "client side receives a manifest file, from which it chooses what
-    // type of video quality will it receive, depending on the throughput the client has." Keeping this
-    // in the rare case that it's the only option to obtain streamURLs.
+	// For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
+	// HTTP), a process that where "client side receives a manifest file, from which it chooses what
+	// type of video quality will it receive, depending on the throughput the client has." Keeping this
+	// in the rare case that it's the only option to obtain streamURLs.
 - (void) handleDashManifestWithXMLString:(NSString *)XMLString response:(NSURLResponse *)response
 {
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
