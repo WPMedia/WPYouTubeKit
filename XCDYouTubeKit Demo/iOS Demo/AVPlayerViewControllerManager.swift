@@ -182,7 +182,22 @@ extension UIView {
 			}.resume()
 		}
         
+        /* Title and Thumbnail metadata have been removed
+        let title = video.title
+
+        if let thumbnailURL = video.thumbnailURL {
+            URLSession.shared.dataTask(with: thumbnailURL) { (data, _, error) in
+            guard error == nil else { return }
+            guard data != nil else { return }
+            guard let image = UIImage(data: data!) else { return }
+            let artwork = MPMediaItemArtwork(image: image)
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+            self.nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+            }.resume()
+        }
+
         nowPlayingInfo[MPMediaItemPropertyTitle] = title
+        */
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
     }
 	

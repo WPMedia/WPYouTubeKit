@@ -65,51 +65,6 @@ extern NSString *const XCDYouTubeVideoQualityHTTPLiveStreaming;
  *  The 11 characters YouTube video identifier.
  */
 @property (nonatomic, readonly) NSString *identifier;
-/**
- *  The title of the video.
- */
-@property (nonatomic, readonly) NSString *title;
-/**
- * The name of author that uploaded this video.
- */
-@property (nonatomic, readonly) NSString *author;
-/**
- * The channel identifier of YouTube channel that this video belongs to.
- */
-@property (nonatomic, readonly) NSString *channelIdentifier;
-/**
- * The description of the video.
- */
-@property (nonatomic, readonly) NSString *videoDescription;
-/**
- *  The duration of the video in seconds.
- */
-@property (nonatomic, readonly) NSTimeInterval duration;
-/**
- *  The views count of the video.
- */
-@property (nonatomic, readonly) NSInteger viewCount;
-/**
- *  An array of thumbnail URLs for an images of different sizes. Ordered from smaller to bigger.
- */
-@property (nonatomic, readonly, nullable) NSArray<NSURL *> *thumbnailURLs;
-/**
- *  A thumbnail URL for an image of small size, i.e. 120×90. May be nil.
- */
-@property (nonatomic, readonly, nullable) NSURL *thumbnailURL
-	DEPRECATED_MSG_ATTRIBUTE("Use `thumbnailURLs` instead.");
-/**
- *  A thumbnail URL for an image of small size, i.e. 120×90. May be nil.
- */
-@property (nonatomic, readonly, nullable) NSURL *smallThumbnailURL DEPRECATED_MSG_ATTRIBUTE("Renamed. Use `thumbnailURL` instead.");
-/**
- *  A thumbnail URL for an image of medium size, i.e. 320×180, 480×360 or 640×480. May be nil.
- */
-@property (nonatomic, readonly, nullable) NSURL *mediumThumbnailURL DEPRECATED_MSG_ATTRIBUTE("No longer available. Use `thumbnailURL` instead.");
-/**
- *  A thumbnail URL for an image of large size, i.e. 1'280×720 or 1'980×1'080. May be nil.
- */
-@property (nonatomic, readonly, nullable) NSURL *largeThumbnailURL DEPRECATED_MSG_ATTRIBUTE("No longer available. Use `thumbnailURL` instead.");
 
 /**
  *  A dictionary of video stream URLs.
@@ -133,15 +88,6 @@ extern NSString *const XCDYouTubeVideoQualityHTTPLiveStreaming;
 *  The `streamURLs` may contain both video and audio streams, some video streams do not contain any audio. This property will return a video stream that contains both audio and video with a maximum video quality of 720p in the case of videos that aren't live. Also, this properly will return the URL to a live stream in the case of live videos.
 */
 @property (nonatomic, readonly, nullable) NSURL *streamURL;
-
-/**
- *  An array of strings (YouTube video identifier) of other streams, this indicates that the video is a multi-camera video. Use  `<XCDYouTubeClient>  or  `<XCDYouTubeVideoOperation>  to fetch the other streams.
-*/
-#if __has_feature(objc_generics)
-@property (nonatomic, readonly, nullable) NSArray<NSString *> *videoIdentifiers;
-#else
-@property (nonatomic, readonly, nullable) NSArray *videoIdentifiers;
-#endif
 
 /**
  *  The expiration date of the video.

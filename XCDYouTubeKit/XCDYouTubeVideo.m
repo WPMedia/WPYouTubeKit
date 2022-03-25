@@ -309,17 +309,15 @@ static NSString *XCDReasonForErrorWithDictionary(NSDictionary *info, NSString *p
 
 - (NSString *) description
 {
-	return [NSString stringWithFormat:@"[%@] %@", self.identifier, self.title];
+	return [NSString stringWithFormat:@"[%@]", self.identifier];
 }
 
 - (NSString *) debugDescription
 {
 	NSDateComponentsFormatter *dateComponentsFormatter = [NSDateComponentsFormatter new];
 	dateComponentsFormatter.unitsStyle = NSDateComponentsFormatterUnitsStyleAbbreviated;
-	NSString *duration = [dateComponentsFormatter stringFromTimeInterval:self.duration] ?: [NSString stringWithFormat:@"%@ seconds", @(self.duration)];
-	NSString *thumbnailDescription = [NSString stringWithFormat:@"Thumbnails: %@", self.thumbnailURLs];
 	NSString *streamsDescription = SortedDictionaryDescription(self.streamURLs);
-	return [NSString stringWithFormat:@"<%@: %p> %@\nDuration: %@\nExpiration date: %@\n%@\nStreams: %@", self.class, self, self.description, duration, self.expirationDate, thumbnailDescription, streamsDescription];
+	return [NSString stringWithFormat:@"<%@: %p> %@\nExpiration date: %@\nStreams: %@", self.class, self, self.description, self.expirationDate, streamsDescription];
 }
 
 #pragma mark - NSCopying
