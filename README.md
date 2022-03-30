@@ -1,6 +1,6 @@
 ## About
 
-**WPYouTubeKit** is a stripped down version of the original **XCDYouTubeKit** with the sole purpose of extracting `streamURLs`.
+**WPYouTubeKit** is a stripped down version of the original **XCDYouTubeKit**, version 2.15.2, with the sole purpose of extracting `streamURLs`.
 
 Additional information is available on the original *XCDYouTubeKit* repo.
 
@@ -12,7 +12,7 @@ Additional information is available on the original *XCDYouTubeKit* repo.
 
 ## Logging
 
-Since version 2.2.0, WPYouTubeKit produces logs. WPYouTubeKit supports [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack) but does not require it.
+Since version 2.2.0 of XCDYouTubeKit, logs are produced. WPYouTubeKit supports [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack) but does not require it.
 
 See the `XCDYouTubeLogger` class [documentation](http://cocoadocs.org/docsets/XCDYouTubeKit/) for more information.
 
