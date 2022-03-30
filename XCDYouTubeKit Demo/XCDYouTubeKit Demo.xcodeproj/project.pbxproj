@@ -42,7 +42,6 @@
 		C27415D217F4CDD80026834B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C27415C017F4CDD80026834B /* AppDelegate.m */; };
 		C27415D317F4CDD80026834B /* DemoAsynchronousViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C27415C217F4CDD80026834B /* DemoAsynchronousViewController.m */; };
 		C27415D517F4CDD80026834B /* DemoInlineViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C27415C617F4CDD80026834B /* DemoInlineViewController.m */; };
-		C27415D617F4CDD80026834B /* DemoThumbnailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C27415C817F4CDD80026834B /* DemoThumbnailViewController.m */; };
 		C27415D717F4CDD80026834B /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C27415C917F4CDD80026834B /* MainStoryboard.storyboard */; };
 		C27415DC17F4CDD80026834B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C27415D117F4CDD80026834B /* main.m */; };
 		C27415E317F4D02E0026834B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C27415E217F4D02E0026834B /* AVFoundation.framework */; };
@@ -153,8 +152,6 @@
 		C27415C217F4CDD80026834B /* DemoAsynchronousViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoAsynchronousViewController.m; sourceTree = "<group>"; };
 		C27415C517F4CDD80026834B /* DemoInlineViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoInlineViewController.h; sourceTree = "<group>"; };
 		C27415C617F4CDD80026834B /* DemoInlineViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoInlineViewController.m; sourceTree = "<group>"; };
-		C27415C717F4CDD80026834B /* DemoThumbnailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoThumbnailViewController.h; sourceTree = "<group>"; };
-		C27415C817F4CDD80026834B /* DemoThumbnailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DemoThumbnailViewController.m; sourceTree = "<group>"; };
 		C27415CA17F4CDD80026834B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard.storyboard; sourceTree = "<group>"; };
 		C27415D117F4CDD80026834B /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C27415DD17F4CE4A0026834B /* XCDYouTubeKit iOS Demo-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "XCDYouTubeKit iOS Demo-Info.plist"; sourceTree = "<group>"; };
@@ -338,8 +335,6 @@
 				019AFA1D2361E9CC00B03F57 /* DemoFullScreenViewController.swift */,
 				C27415C517F4CDD80026834B /* DemoInlineViewController.h */,
 				C27415C617F4CDD80026834B /* DemoInlineViewController.m */,
-				C27415C717F4CDD80026834B /* DemoThumbnailViewController.h */,
-				C27415C817F4CDD80026834B /* DemoThumbnailViewController.m */,
 				C27415C117F4CDD80026834B /* DemoAsynchronousViewController.h */,
 				C27415C217F4CDD80026834B /* DemoAsynchronousViewController.m */,
 				C2EFB48518730A2B0046B1FE /* SettingsViewController.h */,
@@ -711,7 +706,6 @@
 				C2CF7CEE1B17737400C356EA /* ContextLogFormatter.m in Sources */,
 				C2C5D2981A6E5AB900F2B3F8 /* VideoPickerController.m in Sources */,
 				C27415D517F4CDD80026834B /* DemoInlineViewController.m in Sources */,
-				C27415D617F4CDD80026834B /* DemoThumbnailViewController.m in Sources */,
 				019AFA1E2361E9CD00B03F57 /* DemoFullScreenViewController.swift in Sources */,
 				C27415DC17F4CDD80026834B /* main.m in Sources */,
 				C2EFB48718730A2B0046B1FE /* SettingsViewController.m in Sources */,
