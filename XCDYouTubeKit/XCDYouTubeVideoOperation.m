@@ -10,16 +10,12 @@
 #import "XCDYouTubeError.h"
 #import "XCDYouTubeVideoWebpage.h"
 #import "XCDYouTubeDashManifestXML.h"
-#import "XCDYouTubePlayerScript.h"
 #import "XCDYouTubeLogger+Private.h"
 
 typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
-	XCDYouTubeRequestTypeGetVideoInfo = 1,
-	XCDYouTubeRequestTypeWatchPage,
-	XCDYouTubeRequestTypeEmbedPage,
-	XCDYouTubeRequestTypeJavaScriptPlayer,
-	XCDYouTubeRequestTypeDashManifest,
-	
+	// Removed other enums but keeps raw values for remaining ones
+	XCDYouTubeRequestTypeWatchPage = 2,
+	XCDYouTubeRequestTypeDashManifest = 5,
 };
 
 @interface XCDYouTubeVideoOperation ()
@@ -27,7 +23,6 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 @property (atomic, copy, readonly) NSString *languageIdentifier;
 @property (atomic, strong, readonly) NSArray <NSHTTPCookie *> *cookies;
 @property (atomic, strong, readonly) NSArray <NSString *> *customPatterns;
-@property (atomic, assign) BOOL ranLastEmbedPage;
 @property (atomic, assign) NSInteger requestCount;
 @property (atomic, assign) XCDYouTubeRequestType requestType;
 @property (atomic, strong) NSMutableArray *eventLabels;
@@ -40,11 +35,8 @@ typedef NS_ENUM(NSUInteger, XCDYouTubeRequestType) {
 @property (atomic, readonly) dispatch_semaphore_t operationStartSemaphore;
 
 @property (atomic, strong) XCDYouTubeVideoWebpage *webpage;
-@property (atomic, strong) XCDYouTubeVideoWebpage *embedWebpage;
-@property (atomic, strong) XCDYouTubePlayerScript *playerScript;
-@property (atomic, strong) XCDYouTubeVideo *noStreamVideo;
 @property (atomic, strong) NSError *lastError;
-@property (atomic, strong) NSError *youTubeError; // Error actually coming from the YouTube API, i.e. explicit and localized error
+@property (atomic, strong) NSError *youTubeError; // Error from YouTube API, i.e. explicit and localized error
 
 @property (atomic, strong, readwrite) NSError *error;
 @property (atomic, strong, readwrite) XCDYouTubeVideo *video;
@@ -125,36 +117,8 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	return [self initWithVideoIdentifier:videoIdentifier languageIdentifier:languageIdentifier cookies:cookies customPatterns:nil];
 }
 
-#pragma mark - Requests
 
-- (void) startNextRequest
-{
-	if (self.eventLabels.count == 0)
-	{
-		if (self.requestType == XCDYouTubeRequestTypeWatchPage || self.webpage)
-		{
-			if (self.ranLastEmbedPage == NO) {
-				[self startLastEmbedPageRequest];
-				return;
-			}
-			[self finishWithError];
-		}
-		else
-		{
-			[self startWatchPageRequest];
-		}
-	}
-	else
-	{
-		NSString *eventLabel = [self.eventLabels objectAtIndex:0];
-		[self.eventLabels removeObjectAtIndex:0];
-		
-		NSDictionary *query = @{ @"video_id": self.videoIdentifier, @"hl": self.languageIdentifier, @"el": eventLabel, @"ps": @"default" };
-		NSString *queryString = XCDQueryStringWithDictionary(query);
-		NSURL *videoInfoURL = [NSURL URLWithString:[@"https://www.youtube.com/get_video_info?" stringByAppendingString:queryString]];
-		[self startRequestWithURL:videoInfoURL type:XCDYouTubeRequestTypeGetVideoInfo];
-	}
-}
+#pragma mark - Requests
 
 - (void) startWatchPageRequest
 {
@@ -164,21 +128,15 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	[self startRequestWithURL:webpageURL type:XCDYouTubeRequestTypeWatchPage];
 }
 
-// Last resort request, sometimes the `javaScriptPlayerURL` will randomly not appear on `webpage` but will appear on the `embedWebpage` regardless of age restrictions. This appears to be how youtube-dl handles it, see https://github.com/l1ving/youtube-dl/blob/4fcd20a46cbf35ebbeaf06dde3999ad4309d7a8e/youtube_dl/extractor/youtube.py#L1963
-- (void) startLastEmbedPageRequest
-{
-	self.ranLastEmbedPage = YES;
-	NSString *embedURLString = [NSString stringWithFormat:@"https://www.youtube.com/embed/%@", self.videoIdentifier];
-	[self startRequestWithURL:[NSURL URLWithString:embedURLString] type:XCDYouTubeRequestTypeEmbedPage];
-}
-
 - (void) startRequestWithURL:(NSURL *)url type:(XCDYouTubeRequestType)requestType
 {
 	if (self.isCancelled)
 		return;
 	
-	// Max (age-restricted VEVO) = 2×GetVideoInfo + 1×WatchPage + 2×EmbedPage + 1×JavaScriptPlayer + 1×GetVideoInfo + 1xDashManifest
-	if (++self.requestCount > 8)
+	// Downsized from original 8 which included embed page, get info requests.
+	// Here we only should have two requests max: One from the start watch page and in
+	// the rare case of the dash manifest request.
+	if (++self.requestCount > 2)
 	{
 		// This condition should never happen but the request flow is quite complex so better abort here than go into an infinite loop of requests
 		[self finishWithError];
@@ -206,6 +164,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	self.requestType = requestType;
 }
 
+
 #pragma mark - Response Dispatch
 
 - (void) handleConnectionSuccessWithData:(NSData *)data response:(NSURLResponse *)response requestType:(XCDYouTubeRequestType)requestType
@@ -213,7 +172,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	CFStringEncoding encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)response.textEncodingName ?: CFSTR(""));
 	// Use kCFStringEncodingMacRoman as fallback because it defines characters for every byte value and is ASCII compatible. See https://mikeash.com/pyblog/friday-qa-2010-02-19-character-encodings.html
 	NSString *responseString = CFBridgingRelease(CFStringCreateWithBytes(kCFAllocatorDefault, data.bytes, (CFIndex)data.length, encoding != kCFStringEncodingInvalidId ? encoding : kCFStringEncodingMacRoman, false)) ?: @"";
-	
+
 	XCDYouTubeLogVerbose(@"Response: %@\n%@", response, responseString);
 	if ([(NSHTTPURLResponse *)response statusCode] == 429)
 	{
@@ -231,20 +190,11 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 		[self finishWithError];
 		return;
 	}
-	
+
 	switch (requestType)
 	{
-		case XCDYouTubeRequestTypeGetVideoInfo:
-			[self handleVideoInfoResponseWithInfo:XCDDictionaryWithQueryString(responseString) response:response];
-			break;
 		case XCDYouTubeRequestTypeWatchPage:
 			[self handleWebPageWithHTMLString:responseString];
-			break;
-		case XCDYouTubeRequestTypeEmbedPage:
-			[self handleEmbedWebPageWithHTMLString:responseString];
-			break;
-		case XCDYouTubeRequestTypeJavaScriptPlayer:
-			[self handleJavaScriptPlayerWithScript:responseString];
 			break;
 		case XCDYouTubeRequestTypeDashManifest:
 			[self handleDashManifestWithXMLString:responseString response:response];
@@ -254,7 +204,9 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 
 - (void) handleConnectionError:(NSError *)connectionError requestType:(XCDYouTubeRequestType)requestType
 {
-	//Shoud not return a connection error if was as a result of requesting the Dash Manifiest (we have a sucessfully created `XCDYouTubeVideo` and should just finish the operation as if were a 'sucessful' one
+	// Should not return a connection error if was as a result of requesting the Dash Manifiest
+	// (we have a sucessfully created `XCDYouTubeVideo` and should just finish the operation as
+	// if were a 'successful' one
 	if (requestType == XCDYouTubeRequestTypeDashManifest)
 	{
 		[self finishWithVideo:self.lastSuccessfulVideo];
@@ -265,121 +217,68 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 								NSUnderlyingErrorKey: connectionError };
 	self.lastError = [NSError errorWithDomain:XCDYouTubeVideoErrorDomain code:XCDYouTubeErrorNetwork userInfo:userInfo];
 	
-	[self startNextRequest];
+	[self finishWithError];
 }
+
 
 #pragma mark - Response Parsing
-
-- (void) handleVideoInfoResponseWithInfo:(NSDictionary *)info response:(NSURLResponse *)response
-{
-	XCDYouTubeLogDebug(@"Handling video info response");
-	
-	NSError *error = nil;
-	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info playerScript:self.playerScript response:response error:&error];
-	if (video)
-	{
-		self.lastSuccessfulVideo = video;
-		
-		if (info[@"dashmpd"])
-		{
-			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)info[@"dashmpd"]];
-			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
-			return;
-		}
-		[video mergeVideo:self.noStreamVideo];
-		[self finishWithVideo:video];
-	}
-	else
-	{
-		if ([error.domain isEqual:XCDYouTubeVideoErrorDomain] && error.code == XCDYouTubeErrorUseCipherSignature)
-		{
-			self.noStreamVideo = error.userInfo[XCDYouTubeNoStreamVideoUserInfoKey];
-			
-			[self startWatchPageRequest];
-		}
-		else
-		{
-			self.lastError = error;
-			if (error.userInfo[NSLocalizedDescriptionKey])
-				self.youTubeError = error;
-			
-			[self startNextRequest];
-		}
-	}
-}
 
 - (void) handleWebPageWithHTMLString:(NSString *)html
 {
 	XCDYouTubeLogDebug(@"Handling web page response");
-	
+
 	self.webpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
-	
-	if (self.webpage.javaScriptPlayerURL)
-	{
-		[self startRequestWithURL:self.webpage.javaScriptPlayerURL type:XCDYouTubeRequestTypeJavaScriptPlayer];
-	}
-	else
-	{
-		if (self.webpage.isAgeRestricted)
-		{
-			NSString *embedURLString = [NSString stringWithFormat:@"https://www.youtube.com/embed/%@", self.videoIdentifier];
-			[self startRequestWithURL:[NSURL URLWithString:embedURLString] type:XCDYouTubeRequestTypeEmbedPage];
-		}
-		else
-		{
-			[self startNextRequest];
-		}
-	}
+	[self handleVideoInfoResponseWithInfo:self.webpage.videoInfo];
 }
 
-- (void) handleEmbedWebPageWithHTMLString:(NSString *)html
+- (void) handleVideoInfoResponseWithInfo:(NSDictionary *)info
 {
-	XCDYouTubeLogDebug(@"Handling embed web page response");
-	
-	self.embedWebpage = [[XCDYouTubeVideoWebpage alloc] initWithHTMLString:html];
-	
-	if (self.embedWebpage.javaScriptPlayerURL)
+	XCDYouTubeLogDebug(@"Handling video info response");
+
+	NSError *error = nil;
+	XCDYouTubeVideo *video = [[XCDYouTubeVideo alloc] initWithIdentifier:self.videoIdentifier info:info error:&error];
+	if (video && video.streamURLs)
 	{
-		[self startRequestWithURL:self.embedWebpage.javaScriptPlayerURL type:XCDYouTubeRequestTypeJavaScriptPlayer];
+		[self finishWithVideo:video];
 	}
 	else
 	{
-		[self startNextRequest];
+		self.lastSuccessfulVideo = video;
+
+		// In the rare case we need to use the DASH Manifest to get streamURLs...
+		if (info[@"streamingData"][@"dashManifestUrl"] ?: info[@"dashmpd"])
+		{
+			// Extract manifest's url and merge to video...
+			NSURL *dashmpdURL = [NSURL URLWithString:(NSString *_Nonnull)(info[@"dashmpd"] ?: info[@"streamingData"][@"dashManifestUrl"])];
+			[self startRequestWithURL:dashmpdURL type:XCDYouTubeRequestTypeDashManifest];
+			return;
+		}
+
+		self.lastError = error;
+		if (error.userInfo[NSLocalizedDescriptionKey])
+		{
+			self.youTubeError = error;
+		}
+		[self finishWithError];
 	}
 }
 
-- (void) handleJavaScriptPlayerWithScript:(NSString *)script
-{
-	XCDYouTubeLogDebug(@"Handling JavaScript player response");
-	
-	self.playerScript = [[XCDYouTubePlayerScript alloc] initWithString:script customPatterns:self.customPatterns];
-	
-	if (self.webpage.isAgeRestricted && self.cookies.count == 0)
-	{
-		NSString *eurl = [@"https://youtube.googleapis.com/v/" stringByAppendingString:self.videoIdentifier];
-		NSString *sts = self.embedWebpage.sts ?: self.webpage.sts ?: @"";
-		NSDictionary *query = @{ @"video_id": self.videoIdentifier, @"hl": self.languageIdentifier, @"eurl": eurl, @"sts": sts};
-		NSString *queryString = XCDQueryStringWithDictionary(query);
-		NSURL *videoInfoURL = [NSURL URLWithString:[@"https://www.youtube.com/get_video_info?" stringByAppendingString:queryString]];
-		[self startRequestWithURL:videoInfoURL type:XCDYouTubeRequestTypeGetVideoInfo];
-	}
-	else
-	{
-		[self handleVideoInfoResponseWithInfo:self.webpage.videoInfo response:nil];
-	}
-}
-
+	// For possible use with Live videos. YouTube still uses MPEG-DASH (Dynamic Adaptive Streaming over
+	// HTTP), a process that where "client side receives a manifest file, from which it chooses what
+	// type of video quality will it receive, depending on the throughput the client has." Keeping this
+	// in the rare case that it's the only option to obtain streamURLs.
 - (void) handleDashManifestWithXMLString:(NSString *)XMLString response:(NSURLResponse *)response
 {
 	XCDYouTubeLogDebug(@"Handling Dash Manifest response");
 	
 	XCDYouTubeDashManifestXML *dashManifestXML = [[XCDYouTubeDashManifestXML alloc]initWithXMLString:XMLString];
-	NSDictionary *dashhManifestStreamURLs = dashManifestXML.streamURLs;
-	if (dashhManifestStreamURLs)
-		[self.lastSuccessfulVideo mergeDashManifestStreamURLs:dashhManifestStreamURLs];
+	NSDictionary *dashManifestStreamURLs = dashManifestXML.streamURLs;
+	if (dashManifestStreamURLs)
+		[self.lastSuccessfulVideo mergeDashManifestStreamURLs:dashManifestStreamURLs];
 	
 	[self finishWithVideo:self.lastSuccessfulVideo];
 }
+
 
 #pragma mark - Finish Operation
 
@@ -409,6 +308,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	self.isExecuting = NO;
 	self.isFinished = YES;
 }
+
 
 #pragma mark - NSOperation
 
@@ -440,7 +340,7 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	self.isExecuting = YES;
 	
 	self.eventLabels = [[NSMutableArray alloc] initWithArray:@[ @"embedded", @"detailpage" ]];
-	[self startNextRequest];
+	[self startWatchPageRequest];
 }
 
 - (void) cancel

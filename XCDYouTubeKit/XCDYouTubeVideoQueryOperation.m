@@ -179,8 +179,12 @@
 	if (isHTTPLiveStream)
 	{
 		/**
-		 * When it's a live stream all the other streams plus the live stream will cause the `XCDURLGetOperation` to take a extremely longtime to complete.
-		 * Since it's a live stream clients would tend to be only interested in the `XCDYouTubeVideoQualityHTTPLiveStreaming` value and since we checked this already with the head operation then we consider these URLs to be reachable
+		 * When it's a live stream all the other streams plus the live stream will
+		 * cause the `XCDURLGetOperation` to take a extremely longtime to complete.
+		 *
+		 * Since it's a live stream clients would tend to be only interested in the
+		 * `XCDYouTubeVideoQualityHTTPLiveStreaming` value and since we checked
+		 * this already with the head operation then we consider these URLs to be reachable
 		*/
 		[self finishWithStreamURLs:streamURLs streamErrors:streamErrors];
 		return;
